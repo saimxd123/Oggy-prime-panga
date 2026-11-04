@@ -14,24 +14,30 @@ DEV_LINE       = f'💻 <b>Dev</b>  »  <a href="https://t.me/{OWNER_USERNAME}">
 
 MASS_WORKERS = int(os.environ.get('MASS_WORKERS', '20'))
 
-_ADMIN_FILE         = os.path.join(os.path.dirname(__file__), 'admin.json')
-PREMIUM_FILE        = 'premium.txt'
-SITES_FILE          = 'sites.txt'
-PROXY_FILE          = 'proxy.txt'
-USER_PROXY_FILE     = 'user_proxies.json'
-USER_POOL_FILE      = 'user_pool.json'
-API_ENDPOINTS_FILE  = 'api_endpoints.json'
-API_SELECTED_FILE   = 'api_selected.json'
-GC_CONFIG_FILE      = 'gc_config.json'
-KEYS_FILE           = 'keys.json'
+# Persistent storage root — set DATA_DIR=/var/data on Render (mounted disk).
+# Locally it just falls back to the project directory, no change in behaviour.
+DATA_DIR = os.environ.get('DATA_DIR', os.path.dirname(os.path.abspath(__file__)))
+os.makedirs(DATA_DIR, exist_ok=True)
+
+def _data(name: str) -> str:
+    return os.path.join(DATA_DIR, name)
+
+_ADMIN_FILE         = _data('admin.json')
+PREMIUM_FILE        = _data('premium.txt')
+SITES_FILE          = _data('sites.txt')
+PROXY_FILE          = _data('proxy.txt')
+USER_PROXY_FILE     = _data('user_proxies.json')
+USER_POOL_FILE      = _data('user_pool.json')
+API_ENDPOINTS_FILE  = _data('api_endpoints.json')
+API_SELECTED_FILE   = _data('api_selected.json')
+GC_CONFIG_FILE      = _data('gc_config.json')
+KEYS_FILE           = _data('keys.json')
 
 # Two supported provider flavours.
-#   yzio    -> https://check.yzio.app/shopify?site=...&cc=...&proxy=...
-#   shopii  -> http://62.169.23.129:8080/shopii?cc=...&site=...&proxy=...
 API_YZIO_BASE   = "https://check.yzio.app"
 API_SHOPII_BASE = "http://62.169.23.129:8080"
 
-DEFAULT_API_PROVIDER = "yzio"  # first-run default
+DEFAULT_API_PROVIDER = "yzio"
 
 KEY_PREFIX = "OGGY-PROO"
 LIMITS     = {"admin": 10000, "premium": 5000}
