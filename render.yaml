@@ -2,8 +2,14 @@ services:
   - type: worker
     name: oggy-prime-bot
     runtime: python
+    plan: starter
     buildCommand: pip install -r requirements.txt
     startCommand: python bot.py
+    autoDeploy: true
+    disk:
+      name: oggy-data
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: API_ID
         sync: false
@@ -12,6 +18,8 @@ services:
       - key: BOT_TOKEN
         sync: false
       - key: MASS_WORKERS
-        value: "60"
+        value: "20"
       - key: PYTHON_VERSION
         value: "3.11.0"
+      - key: DATA_DIR
+        value: /var/data
