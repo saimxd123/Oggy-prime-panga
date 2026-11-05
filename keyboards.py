@@ -31,8 +31,7 @@ def _color_kb(rows: list) -> dict:
             raw_text = b.get("text", "")
             if "icon_custom_emoji_id" not in b:
                 icon_id = _btn_icon_id(raw_text)
-                if icon_id:
-                    b["icon_custom_emoji_id"] = icon_id
+                if icon_id: b["icon_custom_emoji_id"] = icon_id
             b["text"] = _clean_btn_text(raw_text)
             colored_row.append(b)
         colored.append(colored_row)
@@ -42,23 +41,19 @@ def _strip_styles(markup: dict) -> dict:
     import copy
     m = copy.deepcopy(markup)
     for row in m.get("inline_keyboard", []):
-        for btn in row:
-            btn.pop("style", None)
+        for btn in row: btn.pop("style", None)
     return m
 
 def _strip_icons(markup: dict) -> dict:
     import copy
     m = copy.deepcopy(markup)
     for row in m.get("inline_keyboard", []):
-        for btn in row:
-            btn.pop("icon_custom_emoji_id", None)
+        for btn in row: btn.pop("icon_custom_emoji_id", None)
     return m
 
 _http_session = requests.Session()
 _http_session.verify = False
-_http_adapter = requests.adapters.HTTPAdapter(
-    pool_connections=8, pool_maxsize=32, max_retries=1
-)
+_http_adapter = requests.adapters.HTTPAdapter(pool_connections=8, pool_maxsize=32, max_retries=1)
 _http_session.mount("https://", _http_adapter)
 _http_session.mount("http://",  _http_adapter)
 
@@ -68,74 +63,53 @@ def _raw_post(url, payload):
         p["reply_markup"] = json.dumps(p["reply_markup"], ensure_ascii=False)
     try:
         return _http_session.post(url, json=p, timeout=8).json()
-    except Exception:
-        return {"ok": False}
+    except: return {"ok": False}
 
 async def raw_send(chat_id, text, kb_rows, parse_mode="HTML", reply_to=None):
     kb  = _color_kb(kb_rows)
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": chat_id, "text": text,
-        "parse_mode": parse_mode, "reply_markup": kb,
-        "disable_web_page_preview": True,
-    }
-    if reply_to:
-        payload["reply_to_message_id"] = reply_to
+    payload = {"chat_id": chat_id, "text": text, "parse_mode": parse_mode,
+               "reply_markup": kb, "disable_web_page_preview": True}
+    if reply_to: payload["reply_to_message_id"] = reply_to
     resp = await asyncio.to_thread(_raw_post, url, payload)
-    if resp.get("ok"):
-        return resp["result"]["message_id"]
+    if resp.get("ok"): return resp["result"]["message_id"]
     payload["reply_markup"] = _strip_icons(kb)
     resp = await asyncio.to_thread(_raw_post, url, payload)
-    if resp.get("ok"):
-        return resp["result"]["message_id"]
+    if resp.get("ok"): return resp["result"]["message_id"]
     payload["reply_markup"] = _strip_styles(_strip_icons(kb))
     resp = await asyncio.to_thread(_raw_post, url, payload)
-    if resp.get("ok"):
-        return resp["result"]["message_id"]
+    if resp.get("ok"): return resp["result"]["message_id"]
     return None
 
 async def raw_edit(chat_id, message_id, text, kb_rows, parse_mode="HTML"):
     kb  = _color_kb(kb_rows)
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/editMessageText"
-    payload = {
-        "chat_id": chat_id, "message_id": message_id,
-        "text": text, "parse_mode": parse_mode, "reply_markup": kb,
-        "disable_web_page_preview": True,
-    }
+    payload = {"chat_id": chat_id, "message_id": message_id, "text": text,
+               "parse_mode": parse_mode, "reply_markup": kb, "disable_web_page_preview": True}
     resp = await asyncio.to_thread(_raw_post, url, payload)
-    if resp.get("ok"):
-        return resp
+    if resp.get("ok"): return resp
     payload["reply_markup"] = _strip_icons(kb)
     resp = await asyncio.to_thread(_raw_post, url, payload)
-    if resp.get("ok"):
-        return resp
+    if resp.get("ok"): return resp
     payload["reply_markup"] = _strip_styles(_strip_icons(kb))
     resp = await asyncio.to_thread(_raw_post, url, payload)
     return resp
 
 async def nav_edit(chat_id, message_id, text, kb_rows, parse_mode="HTML"):
     kb = _color_kb(kb_rows)
-    cap_payload = {
-        "chat_id": chat_id, "message_id": message_id,
-        "caption": text, "parse_mode": parse_mode, "reply_markup": kb,
-    }
+    cap_payload = {"chat_id": chat_id, "message_id": message_id, "caption": text,
+                   "parse_mode": parse_mode, "reply_markup": kb}
     resp = await asyncio.to_thread(_raw_post,
         f"https://api.telegram.org/bot{BOT_TOKEN}/editMessageCaption", cap_payload)
-    if resp.get("ok"):
-        return resp
+    if resp.get("ok"): return resp
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/editMessageText"
-    txt_payload = {
-        "chat_id": chat_id, "message_id": message_id,
-        "text": text, "parse_mode": parse_mode, "reply_markup": kb,
-        "disable_web_page_preview": True,
-    }
+    txt_payload = {"chat_id": chat_id, "message_id": message_id, "text": text,
+                   "parse_mode": parse_mode, "reply_markup": kb, "disable_web_page_preview": True}
     resp = await asyncio.to_thread(_raw_post, url, txt_payload)
-    if resp.get("ok"):
-        return resp
+    if resp.get("ok"): return resp
     txt_payload["reply_markup"] = _strip_icons(kb)
     resp = await asyncio.to_thread(_raw_post, url, txt_payload)
-    if resp.get("ok"):
-        return resp
+    if resp.get("ok"): return resp
     txt_payload["reply_markup"] = _strip_styles(_strip_icons(kb))
     resp = await asyncio.to_thread(_raw_post, url, txt_payload)
     return resp
@@ -154,6 +128,7 @@ def rows_gates():
         [{"text": "🔥  Stripe 1$",       "callback_data": "gate_st1"},
          {"text": "💎  Stripe 5$",       "callback_data": "gate_st5"}],
         [{"text": "✅  Stripe Auth2 $0", "callback_data": "gate_auth"}],
+        [{"text": "⚡  Stripe Auth2 v2",  "callback_data": "gate_auth1"}],
         [{"text": "🔑  Manage Proxy",    "callback_data": "manage_proxy"}],
         [{"text": "↪️  Back",            "callback_data": "back_start"}],
     ]
@@ -170,35 +145,21 @@ def rows_proxy(uid: int):
     ]
 
 def rows_admin(uid: int = 0):
-    from config import load_api_provider
-    prov = load_api_provider()
-    api_label = f"🌐  API  »  {'shopii' if prov == 'shopii' else 'yzio'}"
     rows = [
         [{"text": "👑  Users",          "callback_data": "admin_users"},
          {"text": "🌐  Sites",          "callback_data": "admin_sites"}],
         [{"text": "📡  Broadcast",      "callback_data": "admin_broadcast_info"},
          {"text": "⚙️  Proxy Pool",    "callback_data": "admin_proxy_pool"}],
-        [{"text": api_label,            "callback_data": "admin_api_panel"}],
+        [{"text": "🔌  API Endpoints",  "callback_data": "owner_api_eps"},
+         {"text": "💰  Max Price",      "callback_data": "admin_max_price"}],
         [{"text": "📦  Backup",         "callback_data": "admin_backup"},
          {"text": "♻️  Restore",        "callback_data": "admin_restore_info"}],
     ]
     if uid == OWNER_ID:
-        rows.append([{"text": "🔌  API Endpoints", "callback_data": "owner_api_eps"},
-                     {"text": "🔑  Keys",          "callback_data": "owner_keys"}])
+        rows.append([{"text": "🔑  Keys",          "callback_data": "owner_keys"}])
         rows.append([{"text": "🛡  GC / Channels",  "callback_data": "owner_gc"}])
     rows.append([{"text": "❌  Close",              "callback_data": "close"}])
     return rows
-
-def rows_admin_api():
-    from config import load_api_provider
-    prov = load_api_provider()
-    yz_mark = "✅" if prov == "yzio" else "○"
-    sh_mark = "✅" if prov == "shopii" else "○"
-    return [
-        [{"text": f"{yz_mark}  yzio  (check.yzio.app)",   "callback_data": "api_pick_yzio"}],
-        [{"text": f"{sh_mark}  shopii  (62.169.23.129)",  "callback_data": "api_pick_shopii"}],
-        [{"text": "↪️  Back",                             "callback_data": "admin_panel"}],
-    ]
 
 def rows_admin_users():
     return [
@@ -224,13 +185,33 @@ def rows_admin_proxy_pool():
         [{"text": "↪️  Back",           "callback_data": "admin_panel"}],
     ]
 
-def rows_owner_api_eps():
-    return [
-        [{"text": "📋  List",           "callback_data": "owner_api_list"},
-         {"text": "✅  Add",            "callback_data": "owner_api_add_info"}],
-        [{"text": "❌  Remove",         "callback_data": "owner_api_rm_info"}],
-        [{"text": "↪️  Back",           "callback_data": "admin_panel"}],
-    ]
+def rows_owner_api_eps(d=None):
+    if d is None:
+        try:
+            from check_engine import load_api_endpoints
+            d = load_api_endpoints()
+        except:
+            d = {'endpoints': [], 'active_idx': 0}
+    eps = d.get('endpoints', []) or []
+    active_idx = d.get('active_idx', 0)
+    rows = []
+    for i, ep in enumerate(eps):
+        url = ep.get('url', '')
+        key = ep.get('key')
+        short = url.replace('http://', '').replace('https://', '')
+        if len(short) > 30: short = short[:30] + '…'
+        icon = '🟢' if i == active_idx else '⚪'
+        key_tag = ' 🔑' if key else ''
+        rows.append([{
+            'text': f"{icon} {i+1}. {short}{key_tag}",
+            'callback_data': f"owner_api_set_{i}"
+        }])
+    rows.append([
+        {'text': '➕ Add Endpoint', 'callback_data': 'owner_api_add_info'},
+        {'text': '❌ Remove',       'callback_data': 'owner_api_rm_info'},
+    ])
+    rows.append([{'text': '↪️  Back', 'callback_data': 'admin_panel'}])
+    return rows
 
 def rows_owner_keys():
     return [
@@ -258,10 +239,8 @@ def _send_notification(chat_id, text) -> int | None:
             "chat_id": chat_id, "text": text, "parse_mode": "HTML",
             "disable_web_page_preview": True,
         })
-        if r.get("ok"):
-            return r["result"]["message_id"]
-    except Exception:
-        pass
+        if r.get("ok"): return r["result"]["message_id"]
+    except: pass
     return None
 
 def _pin_message_botapi(chat_id, message_id):
@@ -270,14 +249,11 @@ def _pin_message_botapi(chat_id, message_id):
             "chat_id": chat_id, "message_id": message_id,
             "disable_notification": False,
         })
-    except Exception:
-        pass
+    except: pass
 
 def _to_chat_id(val):
-    if isinstance(val, int):
-        return val
-    if isinstance(val, str) and val.lstrip('-').isdigit():
-        return int(val)
+    if isinstance(val, int): return val
+    if isinstance(val, str) and val.lstrip('-').isdigit(): return int(val)
     return val
 
 def _get_chat_info(chat_ref):
@@ -285,8 +261,7 @@ def _get_chat_info(chat_ref):
         r = _raw_post(f"https://api.telegram.org/bot{BOT_TOKEN}/getChat", {
             "chat_id": _to_chat_id(chat_ref)
         })
-        if r.get("ok"):
-            return r["result"]
+        if r.get("ok"): return r["result"]
         print(f"[getChat] {chat_ref}: {r.get('description', 'unknown')}")
     except Exception as e:
         print(f"[getChat] {chat_ref}: {e}")
@@ -295,18 +270,14 @@ def _get_chat_info(chat_ref):
 def _get_join_link(chat_ref):
     info = _get_chat_info(chat_ref)
     if info:
-        if info.get("username"):
-            return f"https://t.me/{info['username']}"
-        if info.get("invite_link"):
-            return info["invite_link"]
+        if info.get("username"): return f"https://t.me/{info['username']}"
+        if info.get("invite_link"): return info["invite_link"]
     try:
         r = _raw_post(f"https://api.telegram.org/bot{BOT_TOKEN}/exportChatInviteLink", {
             "chat_id": _to_chat_id(chat_ref)
         })
-        if r.get("ok"):
-            return r["result"]
-    except Exception:
-        pass
+        if r.get("ok"): return r["result"]
+    except: pass
     return None
 
 def _get_chat_member(chat_ref, user_id) -> bool:
