@@ -10,37 +10,34 @@ BOT_BRAND      = "𝑶𝑮𝑮𝒀'𝑺 𝑷𝑹𝑰𝑴𝑬 𝑩𝑶𝑻"
 OWNER_NAME     = '𝑶𝑮𝑮𝒀 𝑷𝑹𝑶𝑶'
 OWNER_USERNAME = 'oggyproo'
 OWNER_ID       = 8919487892
+BOT_USERNAME   = 'OGGYsPRIME_BOT'
 DEV_LINE       = f'💻 <b>Dev</b>  »  <a href="https://t.me/{OWNER_USERNAME}">{OWNER_NAME}</a>'
 
 MASS_WORKERS = int(os.environ.get('MASS_WORKERS', '20'))
 
-# Persistent storage root — set DATA_DIR=/var/data on Render (mounted disk).
-# Locally it just falls back to the project directory, no change in behaviour.
-DATA_DIR = os.environ.get('DATA_DIR', os.path.dirname(os.path.abspath(__file__)))
-os.makedirs(DATA_DIR, exist_ok=True)
+_ADMIN_FILE         = os.path.join(os.path.dirname(__file__), 'admin.json')
+PREMIUM_FILE        = 'premium.txt'
+SITES_FILE          = 'sites.txt'
+PROXY_FILE          = 'proxy.txt'
+USER_PROXY_FILE     = 'user_proxies.json'
+USER_POOL_FILE      = 'user_pool.json'
+API_ENDPOINTS_FILE  = 'api_endpoints.json'
+GC_CONFIG_FILE      = 'gc_config.json'
+KEYS_FILE           = 'keys.json'
+FEEDBACK_FILE       = 'feedback_pending.json'
+SETTINGS_FILE       = 'settings.json'
 
-def _data(name: str) -> str:
-    return os.path.join(DATA_DIR, name)
-
-_ADMIN_FILE         = _data('admin.json')
-PREMIUM_FILE        = _data('premium.txt')
-SITES_FILE          = _data('sites.txt')
-PROXY_FILE          = _data('proxy.txt')
-USER_PROXY_FILE     = _data('user_proxies.json')
-USER_POOL_FILE      = _data('user_pool.json')
-API_ENDPOINTS_FILE  = _data('api_endpoints.json')
-API_SELECTED_FILE   = _data('api_selected.json')
-GC_CONFIG_FILE      = _data('gc_config.json')
-KEYS_FILE           = _data('keys.json')
-
-# Two supported provider flavours.
-API_YZIO_BASE   = "https://check.yzio.app"
-API_SHOPII_BASE = "http://62.169.23.129:8080"
-
-DEFAULT_API_PROVIDER = "yzio"
+DEFAULT_API_ENDPOINTS = [
+    {"url": "http://62.169.23.129:8080/shopii",   "key": None},
+    {"url": "http://5.83.136.102:8136/shopify",   "key": "CHIRAG"},
+    {"url": "http://5.83.136.102:8137/shopify",   "key": "CHIRAG"},
+    {"url": "https://check.yzio.app/shopify",     "key": None},
+]
+DEFAULT_MAX_SITE_PRICE = 3.0
 
 KEY_PREFIX = "OGGY-PROO"
-LIMITS     = {"admin": 10000, "premium": 5000}
+
+LIMITS = {"admin": 10000, "premium": 5000}
 
 _DEFAULT_ADMINS = (
     {int(x.strip()) for x in os.environ.get('ADMIN_ID', '').split(',') if x.strip().isdigit()}
@@ -68,24 +65,3 @@ def _save_admin_ids(ids: set):
 
 ADMIN_IDS = _load_admin_ids()
 ADMIN_ID  = OWNER_ID
-
-
-# ══════════════════════════════════════════════════════════════
-# API provider selection (admin-switchable, persisted)
-# ══════════════════════════════════════════════════════════════
-def load_api_provider() -> str:
-    try:
-        with open(API_SELECTED_FILE) as f:
-            p = json.load(f).get('provider', DEFAULT_API_PROVIDER)
-            return p if p in ("yzio", "shopii") else DEFAULT_API_PROVIDER
-    except Exception:
-        return DEFAULT_API_PROVIDER
-
-def save_api_provider(provider: str):
-    if provider not in ("yzio", "shopii"):
-        return
-    with open(API_SELECTED_FILE, 'w') as f:
-        json.dump({'provider': provider}, f, indent=2)
-
-def current_api_base() -> str:
-    return API_SHOPII_BASE if load_api_provider() == "shopii" else API_YZIO_BASE
